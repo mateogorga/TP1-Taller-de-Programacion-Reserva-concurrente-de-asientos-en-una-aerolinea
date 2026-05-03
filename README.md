@@ -1,21 +1,143 @@
-# CondorDelSur
+# TP1 - Cóndor del Sur 
 
-**TODO: Add description**
+Sistema concurrente de reservas de asientos implementado en Elixir utilizando procesos manuales (sin OTP).
 
-## Installation
+---
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `condor_del_sur` to your list of dependencies in `mix.exs`:
+## Objetivo
 
-```elixir
-def deps do
-  [
-    {:condor_del_sur, "~> 0.1.0"}
-  ]
-end
+Diseñar e implementar un sistema por CLI que simule la reserva de asientos para un vuelo y que permita mostrar concurrencia real sobre recursos limitados.
+
+---
+
+## Tecnologías
+
+- Elixir
+- Mix
+- Procesos nativos (`spawn`, `send`, `receive`)
+
+---
+
+## Ejecución
+
+### 1. Clonar el repositorio
+
+```bash
+git clone <URL_DEL_REPO>
+cd condor_del_sur 
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/condor_del_sur>.
+### 2. Instalar dependencias
+
+```bash
+mix deps.get
+```
+
+### 3. Ejecutar la demo
+
+```bash
+iex -S mix
+c("demo.exs")
+```
+
+---
+
+
+## Tests
+
+```bash
+mix test
+```
+
+---
+
+## Modelado de dominio
+
+Seat
+ - id
+ - status
+    - :available
+    - :reserved
+    - :confirmed
+
+Reservation
+ - id
+ - passenger
+ - seat_id
+ - status
+    - :pending
+    - :confirmed
+    - :cancelled
+    - :expired
+
+---
+
+## Procesos del sistema
+
+### 1. FlightServer (proceso principal)
+
+Responsable de:
+ - mantener el estado
+ - gestionar reservas
+ - asegurar consistencia
+
+### 2. Procesos cliente
+
+Simulan usuarios concurrentes que:
+ - intentan reservar asientos
+ - reciben respuestas del servidor
+
+### 3. Procesos auxiliares
+
+Se crean con spawn para:
+ - manejar expiración de reservas
+ - evitar bloquear el sistema
+
+---
+
+## Uso de register
+
+El proceso principal se registra para facilitar acceso global:
+
+```bash
+pid = FlightServer.start()
+Process.register(pid, :flight_server)
+```
+
+Esto permite enviar mensajes sin necesidad de conocer el PID.
+
+---
+
+## Uso de monitor
+
+Se utiliza Process.monitor/1 para observar procesos auxiliares:
+ - detecta cuando terminan
+ - recibe mensajes {:DOWN, ...}
+
+```bash
+Process.monitor(pid)
+```
+
+Esto permite registrar eventos sin bloquear el sistema.
+
+---
+
+## Demo 
+
+La demo muestra:
+ - creación de asientos
+ - competencia concurrente por un asiento
+ - confirmación de reserva
+ - cancelación
+ - expiración automática
+ - estado final del sistema
+
+Archivo: demo.exs
+
+---
+
+## Notas
+
+ - No se utiliza OTP (GenServer, Supervisor, etc)
+ - Implementación basada en procesos manuales
 
